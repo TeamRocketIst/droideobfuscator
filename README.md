@@ -5,7 +5,7 @@ This tool uses frida to evaluate string obfuscation functions in android applica
 
 By just providing the regular expression,class and the function the tool will be able to generate a frida script and replace the results in the decompiled code by jadx.
 
-It is just replaces the results from frida into the java files. 
+Replaces the results from frida into the java files. 
 
 Only works with simple functions that have `String` , `long`, `char` literals as arguments.
 
