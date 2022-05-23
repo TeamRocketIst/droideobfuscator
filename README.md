@@ -39,8 +39,7 @@ $ python deobfuscator.py --pkg com.clashof.lights --dir ~/clash_jadx --config co
 
 Example on how to obtain an optimal jadx file:
 ```bash
-jadx --no-imports --show-bad-code -d clash_jadx clash.apk
-
+$ jadx --no-imports --show-bad-code -d clash_jadx clash.apk
 ```
 
 Config file example:
