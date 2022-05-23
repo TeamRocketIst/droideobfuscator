@@ -9,8 +9,16 @@ Only works with simple functions that have `String` , `long`, `char` literals as
 
 Only static method are supported right now (if the constructor doesn't have any arguments it will work for non-static).
 
+Instalation:
+
+```bash
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+$ pip install -r requirements.txt
+```
+
 Usage:
-```python
+```bash
 usage: deobfuscator.py -D [DIRECTORY] --apk [APK_FILES]
 
 Deobfuscate strings.
@@ -48,7 +56,7 @@ Config file example:
 }
 ```
 
-Field explaination:
+Field explanation:
 
 - class -> class to be imported.
 - method -> Method that will run.
