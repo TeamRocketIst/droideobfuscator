@@ -122,6 +122,7 @@ if __name__ == '__main__':
         init_session(package=args.pkg)
 
     enc_functions = []
+    jadx_dir = args.dir
     json_configs = json.load(args.config)
     for enc_f in json_configs['Array']:
         enc_functions.append(EncryptFunction(enc_f["regex"], enc_f["class"], enc_f["method"]))
@@ -130,7 +131,7 @@ if __name__ == '__main__':
 
 
     for enc_f in enc_functions:
-        for root, subdirs, files in os.walk(args.dir):
+        for root, subdirs, files in os.walk(jadx_dir):
             for file in files:
                 if file.endswith('.java'):
                     #print(root, file)
