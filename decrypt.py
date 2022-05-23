@@ -1,7 +1,8 @@
 from __future__ import print_function
 import frida
 import sys, os, queue, javalang
- 
+from utils import get_package_name
+
 class DecryptToken:
     def __init__(self, token, token_type, match, absolute_path):
         super(DecryptToken, self).__init__()
@@ -10,17 +11,20 @@ class DecryptToken:
         self.match = match
         self.absolute_path = absolute_path
  
-def get_current_package():
-    return os.popen("pwd | awk -F '/' '{print $6}'").read()
  
- 
-q = queue.Queue()
-package = get_current_package().rstrip()
-cmd = 'adb shell "ps | grep \'%s\' | awk \'{print \\$2}\'"'%package
-device = frida.get_usb_device()
-pid = device.spawn(package) #int(os.popen(cmd).read().rstrip().split('\n')[0])
-device.resume(pid)    
-session = device.attach(pid)
+def init_session(apk_file=None,package=None):
+    global q
+    global session
+    q = queue.Queue()
+    if package is None and apk_file is not None:
+        package = get_package_name(apk_file)    
+    #cmd = 'adb shell "ps | grep \'%s\' | awk \'{print \\$2}\'"'%package
+    device = frida.get_usb_device()
+    #print(device)
+    pid = device.spawn(package) #int(os.popen(cmd).read().rstrip().split('\n')[0])
+    #print(pid)
+    device.resume(pid)    
+    session = device.attach(pid)
  
  
 def token_to_frida(index, tokens):
@@ -57,8 +61,9 @@ def generate_frida_payloads(data):
     """
     apply_script = "Java.perform(function x () {\n"
     for i,tok in enumerate(tokens):
-        apply_script += script % (i,tok._cls, i,i, tok.method,tokens_to_frida_args(tok),i)
+        apply_script += script % (i,tok._cls, i,i, tok.method, tokens_to_frida_args(tok),i)
     apply_script += "});"
+    #print(apply_script)
     return apply_script
  
 def dec_fun(data):

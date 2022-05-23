@@ -1,6 +1,7 @@
-import sys, re, os, base64, ast, javalang   
-from decrypt2 import c
- 
+import sys, re, os, base64, ast, javalang, argparse, json
+from decrypt import c, init_session
+from utils import init_argparse
+
 class EncryptFunction(object):
     """docstring for EncryptFunction"""
     def __init__(self, regex, method, _cls):
@@ -38,12 +39,12 @@ def write_decrypt_tokens_file(tokens):
         with open(absolute_path, 'r') as f:
             file_code = f.read()
             for tok in d[absolute_path]:
-                print( replace_code_token(tok))
+                print(replace_code_token(tok))
                 file_code = file_code.replace(tok.match, replace_code_token(tok))
                 print(tok.match, tok.token)
-            if file_code != '':
-                with open(absolute_path, 'w') as f:
-                    f.write(file_code)
+            #if file_code != '':
+            #    with open(absolute_path, 'w') as f:
+            #        f.write(file_code)
  
  
 class DecryptTokenList:
@@ -91,7 +92,7 @@ def evaluate_to_python(args):
         else:
             c += a.value
     if c != "":
-        print(c)
+        #print(c)
         n_args.append(ast.literal_eval(c))
     return n_args
  
@@ -112,17 +113,24 @@ def escape_sequences_rules(s):
     # https://docs.python.org/3/reference/lexical_analysis.html
     d = {'\x5c': '\\\\', '"':'\\"', '\a':'\\a', '\b':'\\b', '\f':'\\f', '\n':'\\n', '\r':'\\r', '\t':'\\t', '\v':'\\v', '\n':'\\n'}
     return ''.join(d[c] if c in d else c for c in s)
- 
-enc_functions = [EncryptFunction(r'mccccc\.kkjjkk\.m677b0413041304130413\(\".*?\", (?:\d+?|\'.*?\'), (?:\d+?|\'.*?\'), (?:\d+?|\'.*?\')\)',
-    "mccccc.kkjjkk","b0413Г041304130413Г"),
-                 EncryptFunction(r'mccccc\.kkjjkk\.m675b04130413041304130413\(\".*?\", (?:\d+?|\'.*?\'), (?:\d+?|\'.*?\')\)',"mccccc.kkjjkk","b04130413041304130413\u0413")
-                 ]
-tk_list = DecryptTokenList(20000) 
- 
- 
-if len(sys.argv) > 1:
+
+if __name__ == '__main__':
+    args = init_argparse().parse_args()
+    if args.apk:
+        init_session(apk_file=args.apk[0])
+    else:
+        init_session(package=args.pkg)
+
+    enc_functions = []
+    json_configs = json.load(args.config)
+    for enc_f in json_configs['Array']:
+        enc_functions.append(EncryptFunction(enc_f["regex"], enc_f["class"], enc_f["method"]))
+
+    tk_list = DecryptTokenList(20000) 
+
+
     for enc_f in enc_functions:
-        for root, subdirs, files in os.walk(sys.argv[1]):
+        for root, subdirs, files in os.walk(args.dir):
             for file in files:
                 if file.endswith('.java'):
                     #print(root, file)
@@ -134,16 +142,15 @@ if len(sys.argv) > 1:
                     #print(matches)
                     if matches:
                         for match in matches:
-                            with open(absolute_path) as f:
-                                print(match)
-                                args = get_arguments_invocation(match)
-                                #print(args[1].value)
-                                
-                                if args:
-                                    if tk_list.add_token(evaluate_to_python(args), get_types(args), match, absolute_path, enc_f.method, enc_f._cls):
-                                        all_tokens = c(tk_list.get_tokens())
-                                        write_decrypt_tokens_file(all_tokens)
-                                        tk_list.reset_tokens()
+                            #print(match)
+                            args = get_arguments_invocation(match)
+                            #print(args[1].value)
+                            
+                            if args:
+                                if tk_list.add_token(evaluate_to_python(args), get_types(args), match, absolute_path, enc_f.method, enc_f._cls):
+                                    all_tokens = c(tk_list.get_tokens())
+                                    write_decrypt_tokens_file(all_tokens)
+                                    tk_list.reset_tokens()
     if not tk_list.isEmpty():
         all_tokens = c(tk_list.get_tokens())
         write_decrypt_tokens_file(all_tokens)

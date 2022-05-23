@@ -1,0 +1,9 @@
+{
+   "Array":[
+      {
+         "class":"com.supercell.titan.z1",
+         "method":"a",
+         "regex":"com\\.supercell\\.titan\\.z1\\.a\\(\".*?\"\\)"
+      }
+   ]
+}
