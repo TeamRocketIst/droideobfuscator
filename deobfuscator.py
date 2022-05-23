@@ -42,9 +42,9 @@ def write_decrypt_tokens_file(tokens):
                 print(replace_code_token(tok))
                 file_code = file_code.replace(tok.match, replace_code_token(tok))
                 print(tok.match, tok.token)
-            #if file_code != '':
-            #    with open(absolute_path, 'w') as f:
-            #        f.write(file_code)
+            if file_code != '':
+                with open(absolute_path, 'w') as f:
+                    f.write(file_code)
  
  
 class DecryptTokenList:
