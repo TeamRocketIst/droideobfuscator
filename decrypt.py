@@ -58,7 +58,7 @@ def on_message(message, data):
 def generate_frida_payloads(data):
     tokens = data
     script = """
-    var a%d = Java.use('%s');
+    var a%d = Java.use('%s').$new();
     var byteArray%d = a%d.%s(%s);
     send(byteArray%d);
     """
@@ -77,9 +77,9 @@ def dec_fun(data):
     script.load()
     output_data = []
     for t in data:
-        output_data.append(DecryptToken(q.get(), t.token_type, t.match, t.absolute_path))
+        c = q.get()
+        output_data.append(DecryptToken(c, t.token_type, t.match, t.absolute_path))
     return output_data
  
 def c(data):
     return dec_fun(data)
-    

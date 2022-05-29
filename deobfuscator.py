@@ -21,12 +21,8 @@ class DecryptToken:
         self._cls = _cls
  
 def replace_code_token(token):
-    #for token in tokens:
-    if token.token_type[0] == str:
-        return '"'+escape_sequences_rules(token.token)+'"'
-    elif token.token_type[0] == javalang.tokenizer.Integer:
-        return token.token
- 
+    return '"'+escape_sequences_rules(token.token)+'"'
+    
  
 def write_decrypt_tokens_file(tokens):
     d = {}
@@ -77,31 +73,35 @@ def get_arguments_invocation(match):
                 raise NotImplementedError(type(selectorl))
     elif type(exp) == javalang.tree.MethodInvocation:
         return exp.arguments
-    
-    #exit(0)
-    """args = []
-    for tok in code_tokens:
-        if tok.value == '(':
-            break
-    for tok in code_tokens:
-        #print(tok.value)
-        if tok.value == ')':
-            break
-        else:
-            args.append(tok)
-    return args"""
+    elif type(exp) == javalang.tree.This:
+        for selector in exp.selectors:
+            if type(selector) == javalang.tree.MethodInvocation:
+                return selector.arguments
+            elif type(selector) == javalang.tree.MemberReference:
+                continue
+            else:
+                raise NotImplementedError(type(selectorl))
+    else:
+        raise NotImplementedError("Not Implemented yet "+ str(type(exp)))
+    return []
+
+def remove_java_long_l(a):
+    if '"' not in a and a.endswith('L'):
+        return a.replace('L','')
+    else:
+        return a
  
 def evaluate_to_python(args):
     n_args = []
     for a in args:
         #print(ast.literal_eval(a.value),type(ast.literal_eval(a.value)), a)
         if type(a) == javalang.tree.Literal:
-            n_args.append(ast.literal_eval(a.value))
+            n_args.append(ast.literal_eval(remove_java_long_l(a.value)))
         elif type(a) == javalang.tree.ArrayCreator:
             array = bytearray()
             for element in a.initializer.initializers:
                 if type(element) == javalang.tree.Literal:
-                    array.append(ast.literal_eval(element.value))
+                    array.append(ast.literal_eval(remove_java_long_l(element.value)))
                 else:
                     continue
                     raise NotImplementedError("Can't evaluate "+str(type(element)) +"inside of a"+ str(type(a))+ " yet")
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     for enc_f in json_configs['Array']:
         enc_functions.append(EncryptFunction(enc_f["regex"], enc_f["class"], enc_f["method"]))
 
-    tk_list = DecryptTokenList(20000) 
+    tk_list = DecryptTokenList(10000) 
 
 
     for enc_f in enc_functions:
