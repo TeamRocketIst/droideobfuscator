@@ -29,14 +29,17 @@ def init_session(apk_file=None,package=None):
  
 def token_to_frida(index, tokens):
     #print(tokens.token_type[index])
-    if tokens.token_type[index] == javalang.tokenizer.String and len(tokens.token[index]) != 1:
+    #exit(0)
+    if tokens.token_type[index] == str and len(tokens.token[index]) != 1:
         return "Java.use('java.lang.String').$new(%s)" % str(list([ord(x) for x in tokens.token[index]]))
-    elif tokens.token_type[index] == javalang.tokenizer.String and len(tokens.token[index]) == 1:
+    elif tokens.token_type[index] == str and len(tokens.token[index]) == 1:
         return "String.fromCharCode(%d)" % ord(tokens.token[index])
-    elif tokens.token_type[index] == javalang.tokenizer.DecimalInteger and (tokens.token[index] >= 0 and tokens.token[index] <= 0xff):
+    elif tokens.token_type[index] == int and (tokens.token[index] >= 0 and tokens.token[index] <= 0xff):
         return "String.fromCharCode(%d)" % tokens.token[index]
-    elif tokens.token_type[index] == javalang.tokenizer.DecimalInteger:
+    elif tokens.token_type[index] == int:
         return "Java.use('java.lang.Long').parseLong('%d')" % tokens.token[index]
+    elif tokens.token_type[index] == bytearray:
+        return "%s" % str(list(tokens.token[index]))
  
 def tokens_to_frida_args(tokens):
     output = []
@@ -79,3 +82,4 @@ def dec_fun(data):
  
 def c(data):
     return dec_fun(data)
+    

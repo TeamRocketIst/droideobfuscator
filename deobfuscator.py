@@ -22,7 +22,7 @@ class DecryptToken:
  
 def replace_code_token(token):
     #for token in tokens:
-    if token.token_type[0] == javalang.tokenizer.String:
+    if token.token_type[0] == str:
         return '"'+escape_sequences_rules(token.token)+'"'
     elif token.token_type[0] == javalang.tokenizer.Integer:
         return token.token
@@ -67,8 +67,19 @@ class DecryptTokenList:
         return len(self.args) == 0
  
 def get_arguments_invocation(match):
-    code_tokens = javalang.tokenizer.tokenize(match)
-    args = []
+    code_tokens = javalang.tokenizer.tokenize(match+';')
+    exp = javalang.parser.Parser(code_tokens).parse_expression()
+    if type(exp) == javalang.tree.ClassCreator:
+        for selector in exp.selectors:
+            if type(selector) == javalang.tree.MethodInvocation:
+                return selector.arguments
+            else:
+                raise NotImplementedError(type(selectorl))
+    elif type(exp) == javalang.tree.MethodInvocation:
+        return exp.arguments
+    
+    #exit(0)
+    """args = []
     for tok in code_tokens:
         if tok.value == '(':
             break
@@ -78,35 +89,34 @@ def get_arguments_invocation(match):
             break
         else:
             args.append(tok)
-    return args
+    return args"""
  
 def evaluate_to_python(args):
     n_args = []
-    c = ""
     for a in args:
-        if type(a) == javalang.tokenizer.Separator:
-            n_args.append(ast.literal_eval(c))
-            c= ""
-        elif type(a) == javalang.tokenizer.DecimalInteger:
-            c += a.value.replace('L','')
+        #print(ast.literal_eval(a.value),type(ast.literal_eval(a.value)), a)
+        if type(a) == javalang.tree.Literal:
+            n_args.append(ast.literal_eval(a.value))
+        elif type(a) == javalang.tree.ArrayCreator:
+            array = bytearray()
+            for element in a.initializer.initializers:
+                if type(element) == javalang.tree.Literal:
+                    array.append(ast.literal_eval(element.value))
+                else:
+                    continue
+                    raise NotImplementedError("Can't evaluate "+str(type(element)) +"inside of a"+ str(type(a))+ " yet")
+
+            n_args.append(array)
         else:
-            c += a.value
-    if c != "":
-        #print(c)
-        n_args.append(ast.literal_eval(c))
+            raise NotImplementedError("Can't evaluate "+str(type(a)) +" yet")
+    #print(n_args)
     return n_args
  
  
 def get_types(args):
     n_args = []
-    c = ""
     for a in args:
-        if type(a) == javalang.tokenizer.Separator:
-            continue
-        elif type(a) == javalang.tokenizer.Operator:
-            continue
-        else:
-            n_args.append(type(a))
+        n_args.append(type(a))
     return n_args
  
 def escape_sequences_rules(s):
@@ -137,18 +147,22 @@ if __name__ == '__main__':
                     #print(root, file)
                     absolute_path = root + "/" + file
                     f = open(absolute_path)
-                    matches = re.findall(enc_f.regex, f.read())
+                    fr = f.read()
+                    matches = re.findall(enc_f.regex, fr)
                     #print(matches)
                     f.close()
-                    #print(matches)
                     if matches:
+                        #print(matches)
+                        #print(fr)
                         for match in matches:
                             #print(match)
                             args = get_arguments_invocation(match)
+                            #print(args)
                             #print(args[1].value)
                             
                             if args:
-                                if tk_list.add_token(evaluate_to_python(args), get_types(args), match, absolute_path, enc_f.method, enc_f._cls):
+                                eval_p = evaluate_to_python(args)
+                                if tk_list.add_token(eval_p, get_types(eval_p), match, absolute_path, enc_f.method, enc_f._cls):
                                     all_tokens = c(tk_list.get_tokens())
                                     write_decrypt_tokens_file(all_tokens)
                                     tk_list.reset_tokens()
